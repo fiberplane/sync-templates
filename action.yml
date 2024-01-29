@@ -16,40 +16,64 @@ inputs:
     default: https://studio.fiberplane.com
   templates-directory:
     description: "Custom directory that should be monitored for Template JSONNET files (default: .fiberplane/)"
-    default: .fiberplane
+    default: .fiberplane/templates/
   fp-version:
     description: Version of the Fiberplane CLI to use (latest by default)
     default: latest
+
 runs:
   using: composite
   steps:
+
     - uses: denoland/setup-deno@v1
       with:
-        deno-version: v1.x
-    - name: Download Fiberplane
+        deno-version: v1.x # TODO: pin this
+
+    - name: Set up Fiberplane CLI
       shell: bash
       id: download
       env:
         FP_VERSION: ${{ inputs.fp-version }}
       run: |
+        echo "== Setting up Fiberplane CLI =="
+
+        echo "Running on ${{ runner.arch }}"
 
         if [ ${{ runner.arch }} = "ARM64" ]; then
-          FP_ARCH="aarch64-unknown-linux-gnu"
+          FP_ARCH="aarch64"
+        elif [ ${{ runner.arch }} = "X86" ] || [ ${{ runner.arch }} = "X64" ]; then
+          FP_ARCH="x86_64"
         else
-          FP_ARCH="x86_64-unknown-linux-gnu"
+          echo "Fiberplane CLI supports only x86_64 and ARM64 CPU architectures"
+          exit 1
+        fi
+
+        echo "Running on ${{ runner.os }}"
+
+        if [ ${{ runner.os }} = "Linux" ]; then
+          FP_OS="unknown-linux-gnu"
+        elif [ ${{ runner.os }} = "macOS" ]; then
+          FP_OS="apple-darwin"
+        else
+          echo "Fiberplane CLI supports only Linux and macOS"
+          exit 1
         fi
 
         if [ "$FP_VERSION" != "latest" ]; then
           FP_VERSION="v${FP_VERSION}"
         fi
 
-        URL="https://fp.dev/fp/${VERSION}/${FP_ARCH}"
+        echo "Going to install: $FP_VERSION version of fp"
 
-        SHA256SUM="$(curl -H user-agent:fiberplane-github-action -L "${URL}/checksum.sha256" | awk '{print $1;}')"
+        URL="https://fp.dev/fp/${FP_VERSION}/${FP_ARCH}-${FP_OS}"
+
+        SHA256SUM="$(curl -H user-agent:fiberplane-github-action -s -L "${URL}/checksum.sha256" | grep fp | awk '{print $1;}')"
+
         curl -H user-agent:fiberplane-github-action -L "${URL}/fp" -o fp 
 
         echo "Expected sha256: $SHA256SUM"
-        echo "Actual sha256: $(sha256sum fp)"
+        echo "----------------------------------"
+        echo "Actual sha256: $(sha256sum fp | awk '{print $1;}')"
 
         chmod +x fp
         sudo mv fp /usr/local/bin
@@ -62,4 +86,8 @@ runs:
         FP_BASE_URL: ${{ inputs.fp-base-url }}
         TEMPLATES_DIRECTORY: ${{ inputs.templates-directory }}
       run: |
-        deno run main.ts
+        deno run \
+          --allow-read \
+          --allow-env \
+          --allow-net=${{ inputs.fp-base-url }} \
+          main.ts
