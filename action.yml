@@ -1,0 +1,65 @@
+name: Sync Templates
+description: Synchronizes Templates between your repository and Fiberplane
+branding:
+  icon: tag
+  color: gray-dark
+
+inputs:
+  api-token:
+    description: API token used to access the Fiberplane API with
+    required: true
+  workspace-id:
+    description: ID of the workspace to which the event should be posted
+    required: true
+  fp-base-url:
+    description: Base URL of the Fiberplane API
+    default: https://studio.fiberplane.com
+  templates-directory:
+    description: "Custom directory that should be monitored for Template JSONNET files (default: .fiberplane/)"
+    default: .fiberplane
+  fp-version:
+    description: Version of the Fiberplane CLI to use (latest by default)
+    default: latest
+runs:
+  using: composite
+  steps:
+    - uses: denoland/setup-deno@v1
+      with:
+        deno-version: v1.x
+    - name: Download Fiberplane
+      shell: bash
+      id: download
+      env:
+        FP_VERSION: ${{ inputs.fp-version }}
+      run: |
+
+        if [ ${{ runner.arch }} = "ARM64" ]; then
+          FP_ARCH="aarch64-unknown-linux-gnu"
+        else
+          FP_ARCH="x86_64-unknown-linux-gnu"
+        fi
+
+        if [ "$FP_VERSION" != "latest" ]; then
+          FP_VERSION="v${FP_VERSION}"
+        fi
+
+        URL="https://fp.dev/fp/${VERSION}/${FP_ARCH}"
+
+        SHA256SUM="$(curl -H user-agent:fiberplane-github-action -L "${URL}/checksum.sha256" | awk '{print $1;}')"
+        curl -H user-agent:fiberplane-github-action -L "${URL}/fp" -o fp 
+
+        echo "Expected sha256: $SHA256SUM"
+        echo "Actual sha256: $(sha256sum fp)"
+
+        chmod +x fp
+        sudo mv fp /usr/local/bin
+
+    - name: Run template sync
+      shell: bash
+      env:
+        API_TOKEN: ${{ inputs.api-token }}
+        WORKSPACE_ID: ${{ inputs.workspace-id }}
+        FP_BASE_URL: ${{ inputs.fp-base-url }}
+        TEMPLATES_DIRECTORY: ${{ inputs.templates-directory }}
+      run: |
+        deno run main.ts
