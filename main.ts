@@ -9,23 +9,27 @@ const TEMPLATES_DIRECTORY = Deno.env.get("TEMPLATES_DIRECTORY");
 async function main() {
   // check all inputs
   if (!API_TOKEN) {
-    throw new Error("api-token is not set");
+    console.log("api-token input is not set");
+    Deno.exit(1);
   }
 
   if (!WORKSPACE_ID) {
-    throw new Error("workspace-id is not set");
+    console.log("workspace-id input is not set");
+    Deno.exit(1);
   }
 
   if (!FP_BASE_URL) {
-    throw new Error(
-      "fp-base-url is not set (this is likely a bug in the action as default should be https://studio.fiberplane.com)",
+    console.log(
+      "fp-base-url input is not set (this is likely a bug in the action as default should be https://studio.fiberplane.com)",
     );
+    Deno.exit(1);
   }
 
   if (!TEMPLATES_DIRECTORY) {
-    throw new Error(
-      "templates-directory is not set (this is likely a bug in the action as default should be .fiberplane/templates/)",
+    console.log(
+      "templates-directory input is not set (this is likely a bug in the action as default should be .fiberplane/templates/)",
     );
+    Deno.exit(1);
   }
 
   // for each file in the templates directory run the fp command
@@ -36,3 +40,4 @@ async function main() {
 }
 
 main();
+
