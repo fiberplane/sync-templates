@@ -4,7 +4,7 @@ local c = fp.cell;
 local fmt = fp.format;
 
 function(
-  title='AAAND IT 2'
+  title='WE GOT P1 PPL'
 )
   fp.notebook
   .new(title)
