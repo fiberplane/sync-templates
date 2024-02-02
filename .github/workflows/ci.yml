@@ -17,4 +17,5 @@ jobs:
         with:
           api-token: ${{ secrets.FP_TOKEN }}
           workspace-id: ${{ secrets.FP_WORKSPACE_ID }}
+          fp-base-url: https://demo.fiberplane.io #TODO: remove this when prod gets updated
 
