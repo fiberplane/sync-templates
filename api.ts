@@ -4,6 +4,14 @@
 const FP = "/usr/local/bin/fp";
 const decoder = new TextDecoder();
 
+type Template = {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export async function createTemplate(
   templateFile: string,
   templatesDirectory: string,
@@ -47,6 +55,42 @@ export async function createTemplate(
   console.log(stdout + stderr);
 }
 
+export async function listTemplates(
+  apiToken: string,
+  workspaceId: string,
+  fpBaseUrl: string,
+): Promise<Template[]> {
+  const command = new Deno.Command(FP, {
+    args: ["templates", "list", "--output", "json"],
+    clearEnv: true,
+    env: {
+      FP_TOKEN: apiToken,
+      API_BASE: fpBaseUrl,
+      WORKSPACE_ID: workspaceId,
+    },
+  });
+
+  const { code, stdout: stdoutBuf, stderr: stderrBuf } = await command.output();
+
+  const stderr = decoder.decode(stderrBuf);
+  const stdout = decoder.decode(stdoutBuf);
+
+  if (code !== 0) {
+    console.log(stdout + stderr);
+    throw new Error(stderr);
+  }
+
+  let out;
+
+  try {
+    out = JSON.parse(stdout);
+  } catch (err) {
+    console.log(stdout + stderr);
+    throw new Error(err);
+  }
+
+  return out;
+}
 
 export async function updateTemplate(
   templateFile: string,

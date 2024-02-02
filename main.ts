@@ -36,14 +36,17 @@ if (!TEMPLATES_DIRECTORY) {
   Deno.exit(1);
 }
 
-const validatedEntries = [];
+const validatedTemplates = [];
+
+const entriesToCreate = [];
+const entriesToUpdate = [];
 
 // read and validate all templates
 for await (const dirEntry of Deno.readDir(TEMPLATES_DIRECTORY)) {
   if (dirEntry.isFile && dirEntry.name.endsWith(".jsonnet")) {
     try {
       await validateTemplate(dirEntry.name, TEMPLATES_DIRECTORY);
-      validatedEntries.push(dirEntry);
+      validatedTemplates.push(dirEntry);
     } catch (err) {
       console.log(err);
       Deno.exit(1);
@@ -51,8 +54,43 @@ for await (const dirEntry of Deno.readDir(TEMPLATES_DIRECTORY)) {
   }
 }
 
+const uploadedTemplates = await listTemplates(
+  API_TOKEN,
+  WORKSPACE_ID,
+  FP_BASE_URL,
+);
+
+// the list of templates is not likely to be that long
+// so we can just compare the two lists in a nested loop
+for (const dirEntry of validatedTemplates) {
+  if (
+    uploadedTemplates.find(
+      (template) => template.name === dirEntry.name.replace(".jsonnet", ""),
+    )
+  ) {
+    entriesToUpdate.push(dirEntry);
+  } else {
+    entriesToCreate.push(dirEntry);
+  }
+}
+
+for (const dirEntry of entriesToUpdate) {
+  try {
+    await updateTemplate(
+      dirEntry.name,
+      TEMPLATES_DIRECTORY,
+      API_TOKEN,
+      WORKSPACE_ID,
+      FP_BASE_URL,
+    );
+  } catch (err) {
+    console.log(err);
+    Deno.exit(1);
+  }
+}
+
 // upload all templates
-for (const dirEntry of validatedEntries) {
+for (const dirEntry of entriesToCreate) {
   try {
     await createTemplate(
       dirEntry.name,
@@ -67,4 +105,4 @@ for (const dirEntry of validatedEntries) {
   }
 }
 
-console.log("All templates created successfully!");
+console.log("All templates created and updated successfully!");
