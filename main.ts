@@ -1,76 +1,11 @@
-async function validateTemplate(
-  templateFile: string,
-  templatesDirectory: string,
-) {
-  console.log(`Validating template ${templatesDirectory + templateFile}`);
-
-  const command = new Deno.Command(fp, {
-    cwd: templatesDirectory,
-    args: ["templates", "validate", templateFile],
-    clearEnv: true,
-  });
-
-  const { code, stdout: stdoutBuf, stderr: stderrBuf } = await command.output();
-
-  const stderr = decoder.decode(stderrBuf);
-  const stdout = decoder.decode(stdoutBuf);
-
-  if (code !== 0) {
-    console.log(stdout + stderr);
-    throw new Error(stderr);
-  }
-
-  console.log(stdout + stderr);
-}
-
-async function createTemplate(
-  templateFile: string,
-  templatesDirectory: string,
-  apiToken: string,
-  workspaceId: string,
-  fpBaseUrl: string,
-) {
-  console.log(`Creating template ${templatesDirectory + templateFile}`);
-
-  const command = new Deno.Command(fp, {
-    cwd: templatesDirectory,
-    args: [
-      "templates",
-      "create",
-      templateFile,
-      "--template-name",
-      templateFile.replace(".jsonnet", ""),
-      "--description",
-      templateFile.replace(".jsonnet", ""),
-      "--create-trigger",
-      "false",
-    ],
-    clearEnv: true,
-    env: {
-      FP_TOKEN: apiToken,
-      API_BASE: fpBaseUrl,
-      WORKSPACE_ID: workspaceId,
-    },
-  });
-
-  const { code, stdout: stdoutBuf, stderr: stderrBuf } = await command.output();
-
-  const stderr = decoder.decode(stderrBuf);
-  const stdout = decoder.decode(stdoutBuf);
-
-  if (code !== 0) {
-    console.log(stdout + stderr);
-    throw new Error(stderr);
-  }
-
-  console.log(stdout + stderr);
-}
+import {
+  createTemplate,
+  listTemplates,
+  validateTemplate,
+  updateTemplate,
+} from "./api.ts";
 
 // set up consts
-const fp = "/usr/local/bin/fp";
-
-const decoder = new TextDecoder();
-
 const API_TOKEN = Deno.env.get("API_TOKEN");
 const WORKSPACE_ID = Deno.env.get("WORKSPACE_ID");
 const FP_BASE_URL = Deno.env.get("FP_BASE_URL");
