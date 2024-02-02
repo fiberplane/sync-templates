@@ -72,13 +72,13 @@ runs:
         curl -H user-agent:fiberplane-github-action -L "${URL}/fp" -o fp 
 
         echo "Expected sha256: $SHA256SUM"
-        echo "----------------------------------"
         echo "Actual sha256: $(sha256sum fp | awk '{print $1;}')"
+
 
         chmod +x fp
         sudo mv fp /usr/local/bin
 
-    - name: Run template sync
+    - name: Run template validate and sync
       shell: bash
       env:
         API_TOKEN: ${{ inputs.api-token }}
@@ -89,5 +89,6 @@ runs:
         deno run \
           --allow-read \
           --allow-env \
+          --allow-run=/usr/local/bin/fp \
           --allow-net=${{ inputs.fp-base-url }} \
           main.ts
