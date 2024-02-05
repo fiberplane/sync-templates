@@ -9,7 +9,7 @@ inputs:
     description: API token used to access the Fiberplane API with
     required: true
   workspace-id:
-    description: ID of the workspace to which the event should be posted
+    description: ID of the workspace to which the templates should be uploaded to
     required: true
   fp-base-url:
     description: Base URL of the Fiberplane API
