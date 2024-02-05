@@ -1,5 +1,7 @@
 # sync-templates
 
+[![Continuous Integration](https://github.com/fiberplane/sync-templates/actions/workflows/ci.yml/badge.svg)](https://github.com/fiberplane/sync-templates/actions/workflows/ci.yml)
+
 The `fiberplane/sync-templates` action is a utility that syncs your Fiberplane Templates from a designated directory in your repository with your Fiberplane Workspace.
 
 ## Usage
