@@ -91,4 +91,4 @@ runs:
           --allow-env \
           --allow-run=/usr/local/bin/fp \
           --allow-net=${{ inputs.fp-base-url }} \
-          main.ts
+          ${{ github.action_path }}/main.ts
