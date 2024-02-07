@@ -21,7 +21,7 @@ The `sync-templates` action accepts the following inputs:
 - `workspace-id` (**required**) - the ID of the workspace where the Templates should be sync'ed to
 - `templates-directory` (optional) - directory where valid Templates `*.jsonnet` files are located, default: `.fiberplane/templates/`
 - `fp-version` (optional) - explicit version of the `fp` CLI that should be used in the action, default: `latest`
-- `fp-base-url`(optional) - the base URL of the Fiberplane API (default `studio.fiberplane.com`)
+- `fp-base-url`(optional) - the base URL of the Fiberplane API, default `studio.fiberplane.com`
 
 When run the action will:
 1. Download, setup, and cache the Deno runtime and the Fiberplane CLI (`fp`).

@@ -15,7 +15,7 @@ inputs:
     description: Base URL of the Fiberplane API
     default: https://studio.fiberplane.com
   templates-directory:
-    description: "Custom directory that should be monitored for Template JSONNET files (default: .fiberplane/)"
+    description: "Custom directory that should be monitored for Template JSONNET files (default: .fiberplane/templates/)"
     default: .fiberplane/templates/
   fp-version:
     description: Version of the Fiberplane CLI to use (latest by default)
