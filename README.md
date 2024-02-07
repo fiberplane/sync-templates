@@ -13,7 +13,7 @@ steps:
 - uses: fiberplane/sync-templates@v1
   with:
     api-token: ${{ secrets.FP_TOKEN }} # it is best practice to keep your secrets in GitHub Secrets
-    workspace-id: ${{ secrets.FP_WORKSPACE_ID }}
+    workspace-id: <your_workspace_id> # you can look it up with: fp workspaces list
 ```
 
 The `sync-templates` action accepts the following inputs:
