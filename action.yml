@@ -67,13 +67,18 @@ runs:
 
         URL="https://fp.dev/fp/${FP_VERSION}/${FP_ARCH}-${FP_OS}"
 
-        SHA256SUM="$(curl -H user-agent:fiberplane-github-action -s -L "${URL}/checksum.sha256" | grep fp | awk '{print $1;}')"
+        EXPECTED_SHA256SUM="$(curl -H user-agent:fiberplane-github-action -s -L "${URL}/checksum.sha256" | grep fp | awk '{print $1;}')"
 
         curl -H user-agent:fiberplane-github-action -L "${URL}/fp" -o fp 
 
-        echo "Expected sha256: $SHA256SUM"
-        echo "Actual sha256: $(sha256sum fp | awk '{print $1;}')"
+        ACTUAL_SHA256SUM=$(sha256sum fp | awk '{print $1;}')
 
+        echo "Expected sha256: $EXPECTED_SHA256SUM"
+        echo "Actual sha256: $ACTUAL_SHA256SUM"
+
+        if [ "$ACTUAL_SHA256SUM" != "$EXPECTED_SHA256SUM" ]; then
+          exit 1
+        fi
 
         chmod +x fp
         sudo mv fp /usr/local/bin
