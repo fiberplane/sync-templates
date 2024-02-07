@@ -1,0 +1,99 @@
+name: Sync Templates
+description: Synchronizes Templates between your repository and Fiberplane
+branding:
+  icon: tag
+  color: gray-dark
+
+inputs:
+  api-token:
+    description: API token used to access the Fiberplane API with
+    required: true
+  workspace-id:
+    description: ID of the workspace to which the templates should be uploaded to
+    required: true
+  fp-base-url:
+    description: Base URL of the Fiberplane API
+    default: https://studio.fiberplane.com
+  templates-directory:
+    description: "Custom directory that should be monitored for Template JSONNET files (default: .fiberplane/templates/)"
+    default: .fiberplane/templates/
+  fp-version:
+    description: Version of the Fiberplane CLI to use (latest by default)
+    default: latest
+
+runs:
+  using: composite
+  steps:
+
+    - uses: denoland/setup-deno@v1
+      with:
+        deno-version: v1.x
+
+    - name: Set up Fiberplane CLI
+      shell: bash
+      id: download
+      env:
+        FP_VERSION: ${{ inputs.fp-version }}
+      run: |
+        echo "== Setting up Fiberplane CLI =="
+
+        echo "Running on ${{ runner.arch }}"
+
+        if [ ${{ runner.arch }} = "ARM64" ]; then
+          FP_ARCH="aarch64"
+        elif [ ${{ runner.arch }} = "X86" ] || [ ${{ runner.arch }} = "X64" ]; then
+          FP_ARCH="x86_64"
+        else
+          echo "Fiberplane CLI supports only x86_64 and ARM64 CPU architectures"
+          exit 1
+        fi
+
+        echo "Running on ${{ runner.os }}"
+
+        if [ ${{ runner.os }} = "Linux" ]; then
+          FP_OS="unknown-linux-gnu"
+        elif [ ${{ runner.os }} = "macOS" ]; then
+          FP_OS="apple-darwin"
+        else
+          echo "Fiberplane CLI supports only Linux and macOS"
+          exit 1
+        fi
+
+        if [ "$FP_VERSION" != "latest" ]; then
+          FP_VERSION="v${FP_VERSION}"
+        fi
+
+        echo "Going to install: $FP_VERSION version of fp"
+
+        URL="https://fp.dev/fp/${FP_VERSION}/${FP_ARCH}-${FP_OS}"
+
+        EXPECTED_SHA256SUM="$(curl -H user-agent:fiberplane-github-action -s -L "${URL}/checksum.sha256" | grep fp | awk '{print $1;}')"
+
+        curl -H user-agent:fiberplane-github-action -L "${URL}/fp" -o fp 
+
+        ACTUAL_SHA256SUM=$(sha256sum fp | awk '{print $1;}')
+
+        echo "Expected sha256: $EXPECTED_SHA256SUM"
+        echo "Actual sha256: $ACTUAL_SHA256SUM"
+
+        if [ "$ACTUAL_SHA256SUM" != "$EXPECTED_SHA256SUM" ]; then
+          exit 1
+        fi
+
+        chmod +x fp
+        sudo mv fp /usr/local/bin
+
+    - name: Run template validate and sync
+      shell: bash
+      env:
+        API_TOKEN: ${{ inputs.api-token }}
+        WORKSPACE_ID: ${{ inputs.workspace-id }}
+        FP_BASE_URL: ${{ inputs.fp-base-url }}
+        TEMPLATES_DIRECTORY: ${{ inputs.templates-directory }}
+      run: |
+        deno run \
+          --allow-read \
+          --allow-env \
+          --allow-run=/usr/local/bin/fp \
+          --allow-net=${{ inputs.fp-base-url }} \
+          ${{ github.action_path }}/main.ts
